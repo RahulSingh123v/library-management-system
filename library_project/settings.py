@@ -10,24 +10,35 @@ from decouple import config, Csv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Detect whether we are running on Vercel
+IS_VERCEL = bool(os.environ.get('VERCEL', ''))
+
 
 # ── Security ────────────────────────────────────────────────────
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-local-dev-key-change-me')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
+# On Vercel: always False (safe default). Locally: read from .env, default True.
+DEBUG = False if IS_VERCEL else config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,.vercel.app',
-    cast=Csv()
-)
+# On Vercel: allow all hosts (Vercel's edge proxy handles domain security).
+# Locally: read from .env, default to localhost only.
+if IS_VERCEL:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-# CSRF trusted origins (required for Vercel deployment)
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS',
-    default='https://*.vercel.app,http://localhost:8000',
-    cast=Csv()
-)
+# CSRF trusted origins — allow all Vercel preview + production URLs automatically.
+if IS_VERCEL:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.vercel.app',
+        'https://library-management-system-five-gilt.vercel.app',
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = config(
+        'CSRF_TRUSTED_ORIGINS',
+        default='http://localhost:8000,http://127.0.0.1:8000',
+        cast=Csv()
+    )
 
 
 # ── Installed Apps ───────────────────────────────────────────────
