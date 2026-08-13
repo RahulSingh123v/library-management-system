@@ -6,16 +6,20 @@ We run migrations automatically here so the app is always ready.
 """
 
 import os
+import sys
 
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'library_project.settings')
 
-# Auto-run migrations on startup (essential for Vercel's ephemeral /tmp SQLite)
+# Initialize Django WSGI application first
+application = get_wsgi_application()
+
+# Auto-run migrations on startup after Django is fully initialized
 try:
     from django.core.management import call_command
+    sys.stderr.write("Running auto-migrations on Vercel startup...\n")
     call_command('migrate', '--run-syncdb', verbosity=0, interactive=False)
-except Exception:
-    pass  # If it fails, let the app still try to start
-
-application = get_wsgi_application()
+    sys.stderr.write("Auto-migrations completed successfully.\n")
+except Exception as e:
+    sys.stderr.write(f"Auto-migration failed: {str(e)}\n")
