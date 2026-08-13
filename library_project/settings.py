@@ -17,8 +17,8 @@ IS_VERCEL = bool(os.environ.get('VERCEL', ''))
 # ── Security ────────────────────────────────────────────────────
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-local-dev-key-change-me')
 
-# On Vercel: always False (safe default). Locally: read from .env, default True.
-DEBUG = False if IS_VERCEL else config('DEBUG', default=True, cast=bool)
+# Temporarily True on Vercel to diagnose errors — set to False once stable
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 # On Vercel: allow all hosts (Vercel's edge proxy handles domain security).
 # Locally: read from .env, default to localhost only.
