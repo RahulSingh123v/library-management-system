@@ -14,6 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'library_project.settings')
 
 # Initialize Django WSGI application first
 application = get_wsgi_application()
+app = application  # Required for Vercel serverless functions
 
 # Auto-run migrations on startup after Django is fully initialized
 try:

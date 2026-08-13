@@ -1,8 +1,9 @@
 #!/bin/bash
 # Vercel build script — installs dependencies and collects static files
+echo "Installing dependencies..."
+python3 -m pip install -r requirements.txt --break-system-packages
 
-# PEP 668: Vercel's system Python requires --break-system-packages flag
-python3.12 -m pip install -r requirements.txt --break-system-packages
+echo "Collecting static files..."
+python3 manage.py collectstatic --noinput --clear
 
-# Collect static files into staticfiles/
-python3.12 manage.py collectstatic --noinput
+echo "Build complete."
