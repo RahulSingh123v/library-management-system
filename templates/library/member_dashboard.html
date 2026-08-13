@@ -1,163 +1,178 @@
 {% extends 'base.html' %}
 
-{% block title %}My Dashboard - Library Management System{% endblock %}
+{% block title %}My Dashboard — LibraryOS{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">My Dashboard</h1>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Total Borrowed</h5>
-                <h2>{{ total_borrowed }}</h2>
-            </div>
-        </div>
+<!-- Welcome Banner -->
+<div style="background:linear-gradient(135deg, var(--bg-primary) 0%, #1a1060 100%); border-radius:var(--radius-xl); padding:28px 32px; margin-bottom:28px; display:flex; align-items:center; gap:20px; position:relative; overflow:hidden;">
+  <div style="width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--success)); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0;">
+    {{ user.username|slice:":2"|upper }}
+  </div>
+  <div>
+    <h2 style="font-size:20px; font-weight:800; color:#fff; margin:0 0 4px; letter-spacing:-.3px;">
+      Welcome back, {{ user.first_name|default:user.username }}!
+    </h2>
+    <p style="font-size:13.5px; color:#94a3b8; margin:0;">
+      Manage your borrowed books and explore the library collection.
+    </p>
+  </div>
+  <a href="{% url 'library:book_list' %}" class="btn-lms" style="margin-left:auto; background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.2); flex-shrink:0;" id="member-browse-btn">
+    <i class="fas fa-book-open"></i> Browse Books
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="grid-stats" style="margin-bottom:28px;">
+  <div class="stat-card indigo" id="stat-total-borrowed">
+    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Total Borrowed</div>
+      <div class="stat-value">{{ total_borrowed }}</div>
+      <div class="stat-sub">All time</div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Active Borrows</h5>
-                <h2>{{ active_borrows.count }}</h2>
-            </div>
-        </div>
+  </div>
+
+  <div class="stat-card emerald" id="stat-active">
+    <div class="stat-icon"><i class="fas fa-book-bookmark"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Active Borrows</div>
+      <div class="stat-value">{{ active_borrows.count }}</div>
+      <div class="stat-sub">Currently on loan</div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title">Overdue Books</h5>
-                <h2>{{ overdue_books|length }}</h2>
-            </div>
-        </div>
+  </div>
+
+  <div class="stat-card rose" id="stat-overdue">
+    <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Overdue Books</div>
+      <div class="stat-value">{{ overdue_books|length }}</div>
+      <div class="stat-sub">Return immediately</div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title">Browse Books</h5>
-                <a href="{% url 'library:book_list' %}" class="btn btn-light mt-2">Go to Books</a>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 <!-- Active Borrows -->
-<div class="card mb-4">
-    <div class="card-header bg-success text-white">
-        <h4 class="mb-0">Active Borrows</h4>
+<div class="lms-card" style="margin-bottom:24px;">
+  <div class="lms-card-header">
+    <span class="lms-card-title"><i class="fas fa-book-bookmark"></i> Active Borrows</span>
+    <a href="{% url 'library:my_borrowed_books' %}" class="btn-lms btn-outline-lms btn-sm-lms" id="view-all-active-link">View All</a>
+  </div>
+  <div class="lms-card-body" style="padding:0;">
+    {% if active_borrows %}
+    <div class="lms-table-wrap">
+      <table class="lms-table">
+        <thead>
+          <tr>
+            <th>Book</th>
+            <th>Author</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for borrow in active_borrows %}
+          <tr {% if borrow.is_overdue %}class="overdue-row"{% endif %}>
+            <td style="font-weight:600;">{{ borrow.book.title }}</td>
+            <td style="color:var(--text-secondary);">{{ borrow.book.author }}</td>
+            <td>
+              {% if borrow.status == 'Pending' %}
+                <span class="status-badge badge-pending">Pending</span>
+              {% elif borrow.status == 'Approved' %}
+                <span class="status-badge badge-approved">Approved</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-size:13px; color:{% if borrow.is_overdue %}var(--danger){% else %}var(--text-secondary){% endif %}; font-weight:{% if borrow.is_overdue %}700{% else %}400{% endif %};">
+                {{ borrow.due_date }}
+              </span>
+              {% if borrow.is_overdue %}
+                <span class="status-badge badge-overdue" style="margin-left:6px; font-size:10px;">OVERDUE</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if borrow.status == 'Approved' %}
+                <a href="{% url 'library:return_book' borrow.pk %}"
+                   class="btn-lms btn-accent btn-sm-lms"
+                   id="return-{{ borrow.pk }}"
+                   data-confirm="Return '{{ borrow.book.title }}'?"
+                   data-confirm-title="Return Book"
+                   data-confirm-ok="Yes, Return"
+                   data-confirm-type="success">
+                  <i class="fas fa-undo"></i> Return
+                </a>
+              {% else %}
+                <span style="font-size:12px; color:var(--text-muted);">Awaiting approval</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="card-body">
-        {% if active_borrows %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Book</th>
-                            <th>Author</th>
-                            <th>Status</th>
-                            <th>Due Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for borrow in active_borrows %}
-                            <tr {% if borrow.is_overdue %}class="table-danger overdue-row"{% endif %}>
-                                <td>{{ borrow.book.title }}</td>
-                                <td>{{ borrow.book.author }}</td>
-                                <td>
-                                    {% if borrow.status == 'Pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                    {% elif borrow.status == 'Approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {{ borrow.due_date }}
-                                    {% if borrow.is_overdue %}
-                                        <span class="badge bg-danger">OVERDUE</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if borrow.status == 'Approved' %}
-                                        <a href="{% url 'library:return_book' borrow.pk %}" 
-                                           class="btn btn-sm btn-primary"
-                                           onclick="return confirmReturn();">
-                                            <i class="fas fa-undo"></i> Return
-                                        </a>
-                                    {% else %}
-                                        <span class="text-muted">Awaiting approval</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="text-muted">You have no active borrows.</p>
-        {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-book-open"></i></div>
+      <h4>No active borrows</h4>
+      <p>You haven't borrowed any books yet.</p>
+      <a href="{% url 'library:book_list' %}" class="btn-lms btn-accent" id="browse-now-btn">Browse Books</a>
     </div>
+    {% endif %}
+  </div>
 </div>
 
-<!-- Borrow History -->
-<div class="card">
-    <div class="card-header bg-info text-white">
-        <h4 class="mb-0">Recent Borrow History</h4>
+<!-- Recent History -->
+<div class="lms-card">
+  <div class="lms-card-header">
+    <span class="lms-card-title"><i class="fas fa-clock-rotate-left"></i> Recent History</span>
+    <a href="{% url 'library:borrow_history' %}" class="btn-lms btn-outline-lms btn-sm-lms" id="view-full-history-link">Full History</a>
+  </div>
+  <div class="lms-card-body" style="padding:0;">
+    {% if borrow_history %}
+    <div class="lms-table-wrap">
+      <table class="lms-table">
+        <thead>
+          <tr>
+            <th>Book</th>
+            <th>Borrowed</th>
+            <th>Due Date</th>
+            <th>Returned</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for borrow in borrow_history %}
+          <tr>
+            <td style="font-weight:600;">{{ borrow.book.title }}</td>
+            <td style="font-size:13px; color:var(--text-secondary);">{{ borrow.borrow_date|date:"M d, Y" }}</td>
+            <td style="font-size:13px; color:var(--text-secondary);">{{ borrow.due_date }}</td>
+            <td style="font-size:13px; color:var(--text-secondary);">{{ borrow.return_date|default:"—" }}</td>
+            <td>
+              {% if borrow.status == 'Pending' %}
+                <span class="status-badge badge-pending">Pending</span>
+              {% elif borrow.status == 'Approved' %}
+                <span class="status-badge badge-approved">Approved</span>
+              {% elif borrow.status == 'Returned' %}
+                <span class="status-badge badge-returned">Returned</span>
+              {% elif borrow.status == 'Rejected' %}
+                <span class="status-badge badge-rejected">Rejected</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="card-body">
-        {% if borrow_history %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Book</th>
-                            <th>Borrow Date</th>
-                            <th>Due Date</th>
-                            <th>Return Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for borrow in borrow_history %}
-                            <tr>
-                                <td>{{ borrow.book.title }}</td>
-                                <td>{{ borrow.borrow_date|date:"M d, Y" }}</td>
-                                <td>{{ borrow.due_date }}</td>
-                                <td>{{ borrow.return_date|default:"N/A" }}</td>
-                                <td>
-                                    {% if borrow.status == 'Pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                    {% elif borrow.status == 'Approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% elif borrow.status == 'Returned' %}
-                                        <span class="badge bg-secondary">Returned</span>
-                                    {% elif borrow.status == 'Rejected' %}
-                                        <span class="badge bg-danger">Rejected</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <a href="{% url 'library:borrow_history' %}" class="btn btn-outline-primary">View Full History</a>
-        {% else %}
-            <p class="text-muted">No borrow history available.</p>
-        {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-history"></i></div>
+      <h4>No history yet</h4>
+      <p>Your borrow history will appear here.</p>
     </div>
+    {% endif %}
+  </div>
 </div>
 
-<script>
-function confirmReturn() {
-    return confirm('Are you sure you want to return this book?');
-}
-
-// Highlight overdue books
-document.addEventListener('DOMContentLoaded', function() {
-    const overdueRows = document.querySelectorAll('.overdue-row');
-    overdueRows.forEach(row => {
-        row.style.backgroundColor = '#f8d7da';
-    });
-});
-</script>
 {% endblock %}

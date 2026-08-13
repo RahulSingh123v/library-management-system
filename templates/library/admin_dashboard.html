@@ -1,130 +1,165 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin Dashboard - Library Management System{% endblock %}
+{% block title %}Admin Dashboard — LibraryOS{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Admin Dashboard</h1>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-book"></i> Total Books</h5>
-                <h2>{{ total_books }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-users"></i> Total Users</h5>
-                <h2>{{ total_users }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-hand-holding"></i> Borrowed Books</h5>
-                <h2>{{ total_borrowed }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-clock"></i> Pending Requests</h5>
-                <h2>{{ pending_requests }}</h2>
-            </div>
-        </div>
-    </div>
+<div class="section-header">
+  <div>
+    <h1 class="section-title"><i class="fas fa-gauge-high"></i> Admin Dashboard</h1>
+    <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;">
+      Overview of library activity and stats
+    </p>
+  </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Overdue Books</h5>
-                <h2>{{ overdue_count }}</h2>
-            </div>
-        </div>
+<!-- Stats Row -->
+<div class="grid-stats" style="margin-bottom:28px;">
+  <div class="stat-card indigo" id="stat-total-books">
+    <div class="stat-icon"><i class="fas fa-book"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Total Books</div>
+      <div class="stat-value">{{ total_books }}</div>
+      <div class="stat-sub">In catalogue</div>
     </div>
+  </div>
+
+  <div class="stat-card emerald" id="stat-total-users">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Registered Members</div>
+      <div class="stat-value">{{ total_users }}</div>
+      <div class="stat-sub">Active accounts</div>
+    </div>
+  </div>
+
+  <div class="stat-card sky" id="stat-borrowed">
+    <div class="stat-icon"><i class="fas fa-book-bookmark"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Currently Borrowed</div>
+      <div class="stat-value">{{ total_borrowed }}</div>
+      <div class="stat-sub">Books on loan</div>
+    </div>
+  </div>
+
+  <div class="stat-card amber" id="stat-pending">
+    <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Pending Requests</div>
+      <div class="stat-value">{{ pending_requests }}</div>
+      <div class="stat-sub">Awaiting review</div>
+    </div>
+  </div>
+
+  <div class="stat-card rose" id="stat-overdue">
+    <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="stat-body">
+      <div class="stat-label">Overdue Books</div>
+      <div class="stat-value">{{ overdue_count }}</div>
+      <div class="stat-sub">Past due date</div>
+    </div>
+  </div>
 </div>
 
 <!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Quick Actions</h4>
-            </div>
-            <div class="card-body">
-                <a href="{% url 'admin:library_book_add' %}" class="btn btn-primary me-2">
-                    <i class="fas fa-plus"></i> Add New Book
-                </a>
-                <a href="{% url 'library:borrow_requests_list' %}" class="btn btn-warning me-2">
-                    <i class="fas fa-list"></i> View Borrow Requests
-                </a>
-                <a href="{% url 'library:users_list' %}" class="btn btn-success me-2">
-                    <i class="fas fa-users"></i> View All Users
-                </a>
-                <a href="{% url 'admin:index' %}" class="btn btn-info">
-                    <i class="fas fa-cog"></i> Django Admin Panel
-                </a>
-            </div>
-        </div>
+<div class="lms-card" style="margin-bottom:28px;">
+  <div class="lms-card-header">
+    <span class="lms-card-title"><i class="fas fa-bolt"></i> Quick Actions</span>
+  </div>
+  <div class="lms-card-body">
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:14px;">
+      <a href="{% url 'admin:library_book_add' %}" class="action-tile" id="action-add-book">
+        <div class="action-tile-icon"><i class="fas fa-plus"></i></div>
+        <span class="action-tile-label">Add Book</span>
+      </a>
+      <a href="{% url 'library:borrow_requests_list' %}" class="action-tile" id="action-borrow-requests">
+        <div class="action-tile-icon"><i class="fas fa-list-check"></i></div>
+        <span class="action-tile-label">Borrow Requests</span>
+      </a>
+      <a href="{% url 'library:users_list' %}" class="action-tile" id="action-users">
+        <div class="action-tile-icon"><i class="fas fa-users"></i></div>
+        <span class="action-tile-label">All Members</span>
+      </a>
+      <a href="{% url 'library:book_list' %}" class="action-tile" id="action-browse">
+        <div class="action-tile-icon"><i class="fas fa-book-open"></i></div>
+        <span class="action-tile-label">Browse Books</span>
+      </a>
+      <a href="{% url 'admin:index' %}" class="action-tile" id="action-admin">
+        <div class="action-tile-icon"><i class="fas fa-cog"></i></div>
+        <span class="action-tile-label">Django Admin</span>
+      </a>
     </div>
+  </div>
 </div>
 
-<!-- Recent Borrow Requests -->
-<div class="card">
-    <div class="card-header bg-warning">
-        <h4 class="mb-0">Recent Pending Requests</h4>
+<!-- Recent Pending Requests -->
+<div class="lms-card">
+  <div class="lms-card-header">
+    <span class="lms-card-title"><i class="fas fa-clock"></i> Recent Pending Requests</span>
+    <a href="{% url 'library:borrow_requests_list' %}" class="btn-lms btn-outline-lms btn-sm-lms" id="view-all-requests-link">View All</a>
+  </div>
+  <div class="lms-card-body" style="padding:0;">
+    {% if recent_requests %}
+    <div class="lms-table-wrap">
+      <table class="lms-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Book</th>
+            <th>Requested</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for borrow in recent_requests %}
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar-sm">{{ borrow.user.username|slice:":2"|upper }}</div>
+                <div class="user-info">
+                  <div class="user-name">{{ borrow.user.username }}</div>
+                </div>
+              </div>
+            </td>
+            <td style="font-weight:600;">{{ borrow.book.title }}</td>
+            <td style="color:var(--text-secondary); font-size:13px;">{{ borrow.borrow_date|date:"M d, Y H:i" }}</td>
+            <td style="color:var(--text-secondary); font-size:13px;">{{ borrow.due_date }}</td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <a href="{% url 'library:approve_borrow' borrow.pk %}"
+                   class="btn-lms btn-success-lms btn-sm-lms"
+                   id="approve-{{ borrow.pk }}"
+                   data-confirm="Approve borrow request for '{{ borrow.book.title }}'?"
+                   data-confirm-title="Approve Request"
+                   data-confirm-ok="Approve"
+                   data-confirm-type="success">
+                  <i class="fas fa-check"></i> Approve
+                </a>
+                <a href="{% url 'library:reject_borrow' borrow.pk %}"
+                   class="btn-lms btn-danger-lms btn-sm-lms"
+                   id="reject-{{ borrow.pk }}"
+                   data-confirm="Reject borrow request for '{{ borrow.book.title }}'?"
+                   data-confirm-title="Reject Request"
+                   data-confirm-ok="Reject">
+                  <i class="fas fa-xmark"></i> Reject
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="card-body">
-        {% if recent_requests %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Book</th>
-                            <th>Request Date</th>
-                            <th>Due Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for borrow in recent_requests %}
-                            <tr>
-                                <td>{{ borrow.user.username }}</td>
-                                <td>{{ borrow.book.title }}</td>
-                                <td>{{ borrow.borrow_date|date:"M d, Y H:i" }}</td>
-                                <td>{{ borrow.due_date }}</td>
-                                <td>
-                                    <a href="{% url 'library:approve_borrow' borrow.pk %}" 
-                                       class="btn btn-sm btn-success"
-                                       onclick="return confirm('Approve this borrow request?');">
-                                        <i class="fas fa-check"></i> Approve
-                                    </a>
-                                    <a href="{% url 'library:reject_borrow' borrow.pk %}" 
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Reject this borrow request?');">
-                                        <i class="fas fa-times"></i> Reject
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <a href="{% url 'library:borrow_requests_list' %}" class="btn btn-outline-primary">
-                View All Requests
-            </a>
-        {% else %}
-            <p class="text-muted">No pending borrow requests.</p>
-        {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
+      <h4>All caught up!</h4>
+      <p>No pending borrow requests at this time.</p>
     </div>
+    {% endif %}
+  </div>
 </div>
+
 {% endblock %}

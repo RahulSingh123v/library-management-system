@@ -1,59 +1,72 @@
 {% extends 'base.html' %}
 
-{% block title %}Borrow Request - Library Management System{% endblock %}
+{% block title %}Borrow Request — LibraryOS{% endblock %}
+{% block page_title %}Borrow Request{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Borrow Request</h4>
-            </div>
-            <div class="card-body">
-                <h5>{{ book.title }}</h5>
-                <p class="text-muted">by {{ book.author }}</p>
-                
-                <form method="post" id="borrowForm" onsubmit="return validateBorrowForm();">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
-                        {{ form.due_date }}
-                        <small class="form-text text-muted">Select when you plan to return this book.</small>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit Request
-                        </button>
-                        <a href="{% url 'library:book_detail' book.pk %}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
+
+<div style="max-width:520px; margin:0 auto;">
+
+  <div style="margin-bottom:18px;">
+    <a href="{% url 'library:book_detail' book.pk %}" class="btn-lms btn-outline-lms btn-sm-lms" id="back-to-book-btn">
+      <i class="fas fa-arrow-left"></i> Back to Book
+    </a>
+  </div>
+
+  <div class="lms-card">
+    <div class="lms-card-header">
+      <span class="lms-card-title"><i class="fas fa-hand-holding-heart"></i> Borrow Request</span>
     </div>
+    <div class="lms-card-body">
+
+      <!-- Book summary -->
+      <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:var(--bg-muted); border-radius:var(--radius-md); margin-bottom:24px; border:1px solid var(--border);">
+        <div style="width:44px; height:56px; background:linear-gradient(135deg,var(--accent),var(--accent-dark)); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="fas fa-book" style="color:#fff; font-size:18px;"></i>
+        </div>
+        <div>
+          <div style="font-size:15px; font-weight:700; color:var(--text-primary);">{{ book.title }}</div>
+          <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">
+            <i class="fas fa-user-pen" style="font-size:11px;"></i> {{ book.author }}
+          </div>
+          <span class="book-category-chip" style="margin-top:6px; display:inline-flex;">{{ book.category.name }}</span>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form method="post" id="borrowForm">
+        {% csrf_token %}
+
+        <div style="margin-bottom:20px;">
+          <label for="{{ form.due_date.id_for_label }}" class="lms-form-label">
+            <i class="fas fa-calendar" style="color:var(--accent);"></i> Return By (Due Date)
+          </label>
+          {{ form.due_date }}
+          <p class="lms-form-hint">Select the date you plan to return this book.</p>
+          {% if form.due_date.errors %}
+          <p class="lms-form-error"><i class="fas fa-circle-xmark"></i> {{ form.due_date.errors.as_text }}</p>
+          {% endif %}
+        </div>
+
+        <div style="display:grid; gap:10px;">
+          <button type="submit" class="btn-lms btn-success-lms" id="submit-borrow-btn" style="justify-content:center; padding:12px;">
+            <i class="fas fa-check-circle"></i> Submit Borrow Request
+          </button>
+          <a href="{% url 'library:book_detail' book.pk %}" class="btn-lms btn-outline-lms" style="justify-content:center; padding:12px;" id="cancel-borrow-btn">
+            <i class="fas fa-xmark"></i> Cancel
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Info notice -->
+  <div class="lms-alert alert-info" style="margin-top:16px;">
+    <i class="fas fa-circle-info"></i>
+    Your request will be reviewed by a librarian. You'll be notified once approved.
+  </div>
+
 </div>
 
-<script>
-function validateBorrowForm() {
-    const dueDateInput = document.querySelector('input[name="due_date"]');
-    if (!dueDateInput.value) {
-        alert('Please select a due date.');
-        return false;
-    }
-    
-    const dueDate = new Date(dueDateInput.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (dueDate <= today) {
-        alert('Due date must be in the future.');
-        return false;
-    }
-    
-    return confirm('Confirm borrow request?');
-}
-</script>
 {% endblock %}

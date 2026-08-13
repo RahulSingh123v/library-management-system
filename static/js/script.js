@@ -1,218 +1,219 @@
-// Library Management System - Client-side JavaScript
+/* =============================================================
+   Library Management System — Main JS
+   ============================================================= */
 
-// Confirm dialog before borrow request
-function confirmBorrow() {
-    return confirm('Are you sure you want to borrow this book?');
-}
+/* ── Sidebar Toggle ─────────────────────────────────────────── */
+(function () {
+  'use strict';
 
-// Confirm dialog before return
-function confirmReturn() {
-    return confirm('Are you sure you want to return this book?');
-}
+  const sidebar  = document.getElementById('lmsSidebar');
+  const main     = document.getElementById('lmsMain');
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const overlay  = document.getElementById('sidebarOverlay');
 
-// Form validation - prevent empty field submission
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return true;
-    
-    const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
-    let isValid = true;
-    
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            input.classList.remove('is-invalid');
-        }
-    });
-    
-    if (!isValid) {
-        alert('Please fill in all required fields.');
+  if (!sidebar || !main) return;
+
+  const COLLAPSED_KEY = 'lms_sidebar_collapsed';
+
+  // Restore state
+  if (window.innerWidth > 768 && localStorage.getItem(COLLAPSED_KEY) === '1') {
+    sidebar.classList.add('collapsed');
+    main.classList.add('sidebar-collapsed');
+  }
+
+  function toggle() {
+    if (window.innerWidth <= 768) {
+      // Mobile: slide in/out
+      sidebar.classList.toggle('mobile-open');
+      if (overlay) overlay.classList.toggle('active');
+    } else {
+      // Desktop: collapse/expand
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      main.classList.toggle('sidebar-collapsed', isCollapsed);
+      localStorage.setItem(COLLAPSED_KEY, isCollapsed ? '1' : '0');
     }
-    
-    return isValid;
-}
+  }
 
-// Live search filtering (client-side)
-function liveSearchBooks() {
-    const searchInput = document.querySelector('input[name="query"]');
-    if (!searchInput) return;
-    
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const bookItems = document.querySelectorAll('.book-item');
-        
-        bookItems.forEach(item => {
-            const title = item.getAttribute('data-title');
-            const author = item.getAttribute('data-author');
-            
-            if (title.includes(searchTerm) || author.includes(searchTerm)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    });
-}
+  if (toggleBtn) toggleBtn.addEventListener('click', toggle);
+  if (overlay)   overlay.addEventListener('click', toggle);
 
-// Highlight overdue books dynamically
-function highlightOverdueBooks() {
-    const overdueRows = document.querySelectorAll('.overdue-row');
-    overdueRows.forEach(row => {
-        row.style.backgroundColor = '#f8d7da';
-        row.style.fontWeight = 'bold';
-    });
-}
+  // Highlight active nav link
+  const links = sidebar.querySelectorAll('.sidebar-link');
+  const currentPath = window.location.pathname;
+  links.forEach(link => {
+    if (link.getAttribute('href') === currentPath) {
+      link.classList.add('active');
+    }
+  });
+})();
 
-// Auto-dismiss alerts after 5 seconds
-function autoDismissAlerts() {
-    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
-}
+/* ── Toast Notification System ──────────────────────────────── */
+window.LMSToast = (function () {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
 
-// Initialize tooltips
-function initializeTooltips() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-}
+  const icons = {
+    success: 'fa-circle-check',
+    danger:  'fa-circle-xmark',
+    warning: 'fa-triangle-exclamation',
+    info:    'fa-circle-info',
+  };
 
-// Add loading indicator for forms
-function addLoadingIndicator(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return;
-    
-    form.addEventListener('submit', function() {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        }
-    });
-}
+  const titles = {
+    success: 'Success',
+    danger:  'Error',
+    warning: 'Warning',
+    info:    'Notice',
+  };
 
-// Validate date inputs
-function validateDateInput(inputId, minDate) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    
-    input.addEventListener('change', function() {
-        const selectedDate = new Date(this.value);
-        const min = minDate ? new Date(minDate) : new Date();
-        
-        if (selectedDate < min) {
-            alert('Please select a future date.');
-            this.value = '';
-        }
-    });
-}
+  function show(message, type = 'info', duration = 4500) {
+    const toast = document.createElement('div');
+    toast.className = `lms-toast toast-${type}`;
+    toast.innerHTML = `
+      <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+      <div class="toast-body">
+        <div class="toast-title">${titles[type] || 'Notice'}</div>
+        <div class="toast-msg">${message}</div>
+      </div>
+      <button class="toast-close"><i class="fas fa-xmark"></i></button>
+    `;
 
-// Smooth scroll to top
-function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => dismiss(toast));
 
-// Add scroll to top button
-function addScrollToTopButton() {
-    const button = document.createElement('button');
-    button.innerHTML = '<i class="fas fa-arrow-up"></i>';
-    button.className = 'btn btn-primary position-fixed bottom-0 end-0 m-3';
-    button.style.display = 'none';
-    button.style.zIndex = '1000';
-    button.onclick = scrollToTop;
-    
-    document.body.appendChild(button);
-    
-    window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 300) {
-            button.style.display = 'block';
-        } else {
-            button.style.display = 'none';
-        }
-    });
-}
+    container.appendChild(toast);
 
-// Confirm before approving/rejecting borrow requests
-function confirmAction(action, bookTitle) {
-    return confirm(`Are you sure you want to ${action} the borrow request for "${bookTitle}"?`);
-}
+    if (duration > 0) {
+      setTimeout(() => dismiss(toast), duration);
+    }
 
-// Real-time search suggestions
-function setupSearchSuggestions() {
-    const searchInput = document.querySelector('input[name="query"]');
-    if (!searchInput) return;
-    
-    let timeout = null;
-    searchInput.addEventListener('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            // This would connect to a backend endpoint for suggestions
-            // For now, just highlight matching items
-            liveSearchBooks();
-        }, 300);
-    });
-}
+    return toast;
+  }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all functions
-    highlightOverdueBooks();
-    autoDismissAlerts();
-    initializeTooltips();
-    liveSearchBooks();
-    setupSearchSuggestions();
-    addScrollToTopButton();
-    
-    // Add loading indicators to all forms
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        if (form.id) {
-            addLoadingIndicator(form.id);
-        }
-    });
-    
-    // Validate date inputs
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        validateDateInput(input.id, new Date());
-    });
-    
-    // Add confirmation to delete actions
-    const deleteButtons = document.querySelectorAll('[data-action="delete"]');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to delete this item?')) {
-                e.preventDefault();
-            }
-        });
-    });
-    
-    // Prevent double form submission
-    const allForms = document.querySelectorAll('form');
-    allForms.forEach(form => {
-        form.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                setTimeout(() => {
-                    submitBtn.disabled = true;
-                }, 0);
-            }
-        });
-    });
+  function dismiss(toast) {
+    if (!toast || !toast.parentNode) return;
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 280);
+  }
+
+  return { show, dismiss };
+})();
+
+/* ── Convert Django Messages to Toasts ──────────────────────── */
+(function () {
+  const djangoAlerts = document.querySelectorAll('[data-lms-message]');
+  djangoAlerts.forEach(el => {
+    const type = el.dataset.lmsType || 'info';
+    const msg  = el.dataset.lmsMessage;
+    if (msg) window.LMSToast.show(msg, type);
+    el.remove();
+  });
+})();
+
+/* ── Confirmation Modal ──────────────────────────────────────── */
+window.LMSConfirm = (function () {
+  let backdrop = document.getElementById('lmsConfirmModal');
+
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'lmsConfirmModal';
+    backdrop.className = 'lms-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="lms-modal">
+        <div class="modal-icon danger-icon" id="confirmIcon"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="modal-title" id="confirmTitle">Are you sure?</div>
+        <div class="modal-msg" id="confirmMsg">This action cannot be undone.</div>
+        <div class="modal-actions">
+          <button class="btn-lms btn-outline-lms" id="confirmCancel">Cancel</button>
+          <button class="btn-lms btn-danger-lms" id="confirmOk">Confirm</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    document.getElementById('confirmCancel').addEventListener('click', close);
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+  }
+
+  let resolveFn = null;
+
+  function open(options = {}) {
+    const title = options.title || 'Are you sure?';
+    const msg   = options.message || 'This action cannot be undone.';
+    const okLabel = options.okLabel || 'Confirm';
+    const type  = options.type || 'danger';
+
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent   = msg;
+    document.getElementById('confirmOk').textContent    = okLabel;
+
+    const icon = document.getElementById('confirmIcon');
+    icon.className = `modal-icon ${type === 'success' ? 'success-icon' : 'danger-icon'}`;
+    icon.innerHTML = type === 'success'
+      ? '<i class="fas fa-circle-check"></i>'
+      : '<i class="fas fa-triangle-exclamation"></i>';
+
+    const okBtn = document.getElementById('confirmOk');
+    okBtn.className = `btn-lms ${type === 'success' ? 'btn-success-lms' : 'btn-danger-lms'}`;
+
+    // Remove old listener
+    const newOk = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    newOk.textContent = okLabel;
+    newOk.addEventListener('click', () => { close(); if (resolveFn) resolveFn(true); });
+
+    backdrop.classList.add('open');
+
+    return new Promise(resolve => { resolveFn = resolve; });
+  }
+
+  function close() {
+    backdrop.classList.remove('open');
+    resolveFn = null;
+  }
+
+  return { open };
+})();
+
+/* ── Intercept Confirm Buttons ───────────────────────────────── */
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-confirm]');
+  if (!btn) return;
+
+  e.preventDefault();
+
+  const title   = btn.dataset.confirmTitle   || 'Are you sure?';
+  const message = btn.dataset.confirm        || 'This action cannot be undone.';
+  const okLabel = btn.dataset.confirmOk      || 'Confirm';
+  const type    = btn.dataset.confirmType    || 'danger';
+
+  window.LMSConfirm.open({ title, message, okLabel, type }).then(confirmed => {
+    if (!confirmed) return;
+    // Follow the href or submit the form
+    if (btn.tagName === 'A' && btn.href) {
+      window.location.href = btn.href;
+    } else if (btn.form) {
+      btn.form.submit();
+    }
+  });
 });
 
-// Export functions for use in templates
-window.confirmBorrow = confirmBorrow;
-window.confirmReturn = confirmReturn;
-window.validateForm = validateForm;
-window.confirmAction = confirmAction;
+/* ── Auto-dismiss legacy alerts ──────────────────────────────── */
+document.querySelectorAll('.auto-dismiss').forEach(el => {
+  setTimeout(() => {
+    el.style.transition = 'opacity .4s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 400);
+  }, 4000);
+});
+
+/* ── Date input min = today ──────────────────────────────────── */
+document.querySelectorAll('input[name="due_date"]').forEach(input => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  input.min = tomorrow.toISOString().split('T')[0];
+});

@@ -1,65 +1,119 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ book.title }} - Library Management System{% endblock %}
+{% block title %}{{ book.title }} — LibraryOS{% endblock %}
+{% block page_title %}Book Detail{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        {% if book.cover_image %}
-            <img src="{{ book.cover_image.url }}" class="img-fluid rounded" alt="{{ book.title }}">
-        {% else %}
-            <div class="bg-secondary d-flex align-items-center justify-content-center rounded" style="height: 400px;">
-                <i class="fas fa-book fa-5x text-white"></i>
-            </div>
-        {% endif %}
-    </div>
-    <div class="col-md-8">
-        <h1>{{ book.title }}</h1>
-        <h4 class="text-muted">by {{ book.author }}</h4>
-        
-        <div class="mt-3">
-            <p><strong>ISBN:</strong> {{ book.isbn }}</p>
-            <p><strong>Category:</strong> {{ book.category.name }}</p>
-            <p><strong>Total Copies:</strong> {{ book.total_copies }}</p>
-            <p>
-                <strong>Availability:</strong> 
-                {% if book.is_available %}
-                    <span class="badge bg-success">{{ book.available_copies }} Available</span>
-                {% else %}
-                    <span class="badge bg-danger">Out of Stock</span>
-                {% endif %}
-            </p>
-        </div>
-        
-        <div class="mt-4">
-            <h5>Description</h5>
-            <p>{{ book.description }}</p>
-        </div>
-        
-        <div class="mt-4">
-            {% if user.is_authenticated %}
-                {% if user_has_active_borrow %}
-                    <button class="btn btn-secondary" disabled>Already Borrowed</button>
-                {% elif book.is_available %}
-                    <a href="{% url 'library:borrow_request' book.pk %}" class="btn btn-success" onclick="return confirmBorrow();">
-                        <i class="fas fa-hand-holding"></i> Borrow This Book
-                    </a>
-                {% else %}
-                    <button class="btn btn-danger" disabled>Currently Unavailable</button>
-                {% endif %}
-            {% else %}
-                <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login to Borrow</a>
-            {% endif %}
-            <a href="{% url 'library:book_list' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Books
-            </a>
-        </div>
-    </div>
+
+<div style="margin-bottom:18px;">
+  <a href="{% url 'library:book_list' %}" class="btn-lms btn-outline-lms btn-sm-lms" id="back-to-books-btn">
+    <i class="fas fa-arrow-left"></i> Back to Books
+  </a>
 </div>
 
-<script>
-function confirmBorrow() {
-    return confirm('Are you sure you want to borrow this book?');
-}
-</script>
+<div class="two-col">
+  <!-- Cover -->
+  <div>
+    <div class="book-detail-cover">
+      {% if book.cover_image %}
+        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+      {% else %}
+        {% with forloop.parentloop.counter as cnt %}
+        <div class="book-cover-placeholder grad-1 book-detail-placeholder" style="border-radius:var(--radius-lg);">
+          <i class="fas fa-book"></i>
+        </div>
+        {% endwith %}
+        <div class="book-cover-placeholder grad-1 book-detail-placeholder" style="border-radius:var(--radius-lg);">
+          <i class="fas fa-book"></i>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Availability pill -->
+    <div style="margin-top:16px; text-align:center;">
+      {% if book.is_available %}
+        <span class="status-badge badge-approved" style="font-size:14px; padding:8px 18px;">
+          <i class="fas fa-circle-check"></i> {{ book.available_copies }} of {{ book.total_copies }} copies available
+        </span>
+      {% else %}
+        <span class="status-badge badge-rejected" style="font-size:14px; padding:8px 18px;">
+          <i class="fas fa-circle-xmark"></i> Out of Stock
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Info panel -->
+  <div>
+    <div class="lms-card">
+      <div class="lms-card-header">
+        <div class="lms-card-title"><i class="fas fa-circle-info"></i> Book Information</div>
+        <span class="book-category-chip" style="margin:0;">{{ book.category.name }}</span>
+      </div>
+      <div class="lms-card-body">
+        <h1 style="font-size:22px; font-weight:800; color:var(--text-primary); letter-spacing:-.3px; margin-bottom:6px; line-height:1.3;">
+          {{ book.title }}
+        </h1>
+        <p style="font-size:15px; color:var(--text-secondary); margin-bottom:24px;">
+          <i class="fas fa-user-pen" style="color:var(--text-muted); font-size:13px;"></i> {{ book.author }}
+        </p>
+
+        <div style="margin-bottom:20px;">
+          <div class="book-meta-row">
+            <span class="book-meta-label"><i class="fas fa-barcode"></i> ISBN</span>
+            <span class="book-meta-value">{{ book.isbn }}</span>
+          </div>
+          <div class="book-meta-row">
+            <span class="book-meta-label"><i class="fas fa-layer-group"></i> Category</span>
+            <span class="book-meta-value">{{ book.category.name }}</span>
+          </div>
+          <div class="book-meta-row">
+            <span class="book-meta-label"><i class="fas fa-copy"></i> Total Copies</span>
+            <span class="book-meta-value">{{ book.total_copies }}</span>
+          </div>
+          <div class="book-meta-row">
+            <span class="book-meta-label"><i class="fas fa-check-circle"></i> Available</span>
+            <span class="book-meta-value">{{ book.available_copies }}</span>
+          </div>
+        </div>
+
+        {% if book.description %}
+        <div style="margin-bottom:24px;">
+          <div class="lms-form-label" style="margin-bottom:8px; font-size:14px;">Description</div>
+          <p style="font-size:14px; color:var(--text-secondary); line-height:1.75;">{{ book.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:16px; border-top:1px solid var(--border);">
+          {% if user.is_authenticated %}
+            {% if user_has_active_borrow %}
+              <button class="btn-lms btn-outline-lms" disabled id="already-borrowed-btn" style="opacity:.6; cursor:not-allowed;">
+                <i class="fas fa-book-bookmark"></i> Already Borrowed
+              </button>
+            {% elif book.is_available %}
+              <a href="{% url 'library:borrow_request' book.pk %}" class="btn-lms btn-success-lms" id="borrow-book-btn"
+                 data-confirm="Request to borrow '{{ book.title }}'?"
+                 data-confirm-title="Borrow this book"
+                 data-confirm-ok="Yes, Request"
+                 data-confirm-type="success">
+                <i class="fas fa-hand-holding-heart"></i> Borrow This Book
+              </a>
+            {% else %}
+              <button class="btn-lms btn-danger-lms" disabled id="unavailable-btn" style="opacity:.7; cursor:not-allowed;">
+                <i class="fas fa-circle-xmark"></i> Currently Unavailable
+              </button>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn-lms btn-accent" id="login-to-borrow-btn">
+              <i class="fas fa-right-to-bracket"></i> Login to Borrow
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

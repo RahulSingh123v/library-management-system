@@ -1,95 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Library Management System{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LibraryOS — Modern Library Management System">
+  <title>{% block title %}LibraryOS — Library Management System{% endblock %}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'library:home' %}">
-                <i class="fas fa-book-reader"></i> Library System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'library:home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'library:book_list' %}">Books</a>
-                    </li>
-                    
-                    {% if user.is_authenticated %}
-                        {% if user.is_superuser or user.groups.all.0.name == 'Admin' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'library:admin_dashboard' %}">Admin Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'library:borrow_requests_list' %}">Borrow Requests</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'library:users_list' %}">Users</a>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'library:member_dashboard' %}">My Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'library:my_borrowed_books' %}">My Books</a>
-                            </li>
-                        {% endif %}
-                        
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:register' %}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Messages -->
-    {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        </div>
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════════ -->
+<aside class="lms-sidebar" id="lmsSidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <i class="fas fa-book-open"></i>
+    </div>
+    <div class="sidebar-brand-text">
+      <span class="sidebar-brand-name">LibraryOS</span>
+      <span class="sidebar-brand-sub">Management System</span>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+
+    <span class="sidebar-section-label">Main</span>
+
+    <a href="{% url 'library:home' %}" class="sidebar-link" title="Home">
+      <span class="sidebar-link-icon"><i class="fas fa-house"></i></span>
+      <span class="sidebar-link-text">Home</span>
+    </a>
+
+    <a href="{% url 'library:book_list' %}" class="sidebar-link" title="Books">
+      <span class="sidebar-link-icon"><i class="fas fa-book"></i></span>
+      <span class="sidebar-link-text">Browse Books</span>
+    </a>
+
+    {% if user.is_authenticated %}
+
+      {% if user.is_superuser or user.groups.all.0.name == 'Admin' %}
+        <!-- Admin section -->
+        <span class="sidebar-section-label">Administration</span>
+
+        <a href="{% url 'library:admin_dashboard' %}" class="sidebar-link" title="Dashboard">
+          <span class="sidebar-link-icon"><i class="fas fa-gauge-high"></i></span>
+          <span class="sidebar-link-text">Dashboard</span>
+        </a>
+
+        <a href="{% url 'library:borrow_requests_list' %}" class="sidebar-link" title="Borrow Requests">
+          <span class="sidebar-link-icon"><i class="fas fa-hand-holding-heart"></i></span>
+          <span class="sidebar-link-text">Borrow Requests</span>
+        </a>
+
+        <a href="{% url 'library:users_list' %}" class="sidebar-link" title="Users">
+          <span class="sidebar-link-icon"><i class="fas fa-users"></i></span>
+          <span class="sidebar-link-text">Members</span>
+        </a>
+
+        <a href="{% url 'admin:library_book_add' %}" class="sidebar-link" title="Add Book">
+          <span class="sidebar-link-icon"><i class="fas fa-plus-circle"></i></span>
+          <span class="sidebar-link-text">Add Book</span>
+        </a>
+
+        <a href="{% url 'admin:index' %}" class="sidebar-link" title="Admin Panel">
+          <span class="sidebar-link-icon"><i class="fas fa-cog"></i></span>
+          <span class="sidebar-link-text">Django Admin</span>
+        </a>
+
+      {% else %}
+        <!-- Member section -->
+        <span class="sidebar-section-label">My Library</span>
+
+        <a href="{% url 'library:member_dashboard' %}" class="sidebar-link" title="My Dashboard">
+          <span class="sidebar-link-icon"><i class="fas fa-gauge-high"></i></span>
+          <span class="sidebar-link-text">My Dashboard</span>
+        </a>
+
+        <a href="{% url 'library:my_borrowed_books' %}" class="sidebar-link" title="Borrowed Books">
+          <span class="sidebar-link-icon"><i class="fas fa-book-bookmark"></i></span>
+          <span class="sidebar-link-text">My Books</span>
+        </a>
+
+        <a href="{% url 'library:borrow_history' %}" class="sidebar-link" title="History">
+          <span class="sidebar-link-icon"><i class="fas fa-clock-rotate-left"></i></span>
+          <span class="sidebar-link-text">Borrow History</span>
+        </a>
+
+      {% endif %}
+
+      <span class="sidebar-section-label">Account</span>
+      <a href="{% url 'accounts:logout' %}" class="sidebar-link" title="Logout">
+        <span class="sidebar-link-icon"><i class="fas fa-right-from-bracket"></i></span>
+        <span class="sidebar-link-text">Logout</span>
+      </a>
+
+    {% else %}
+      <span class="sidebar-section-label">Account</span>
+      <a href="{% url 'accounts:login' %}" class="sidebar-link" title="Login">
+        <span class="sidebar-link-icon"><i class="fas fa-right-to-bracket"></i></span>
+        <span class="sidebar-link-text">Login</span>
+      </a>
+      <a href="{% url 'accounts:register' %}" class="sidebar-link" title="Register">
+        <span class="sidebar-link-icon"><i class="fas fa-user-plus"></i></span>
+        <span class="sidebar-link-text">Register</span>
+      </a>
     {% endif %}
 
-    <!-- Main Content -->
-    <main class="container my-4">
-        {% block content %}
-        {% endblock %}
-    </main>
+  </nav>
+
+  <!-- Footer / User Info -->
+  {% if user.is_authenticated %}
+  <div class="sidebar-footer">
+    <div class="sidebar-user-avatar">{{ user.username|slice:":2"|upper }}</div>
+    <div class="sidebar-user-info">
+      <div class="sidebar-user-name">{{ user.username }}</div>
+      <div class="sidebar-user-role">
+        {% if user.is_superuser or user.groups.all.0.name == 'Admin' %}Administrator{% else %}Member{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</aside>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════════ -->
+<div class="lms-main" id="lmsMain">
+
+  <!-- Topbar -->
+  <header class="lms-topbar">
+    <button class="topbar-toggle" id="sidebarToggle" title="Toggle sidebar" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="topbar-breadcrumb">
+      <span>LibraryOS</span>
+      <span class="bc-sep"><i class="fas fa-chevron-right" style="font-size:9px;"></i></span>
+      <span class="bc-current">{% block page_title %}Page{% endblock %}</span>
+    </div>
+
+    <div class="topbar-right">
+      {% if user.is_authenticated %}
+        <a href="{% url 'library:book_list' %}" class="topbar-icon-btn" title="Browse Books">
+          <i class="fas fa-search"></i>
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="topbar-icon-btn" title="Logout">
+          <i class="fas fa-right-from-bracket"></i>
+        </a>
+        <div class="topbar-user-pill">
+          <div class="avatar">{{ user.username|slice:":2"|upper }}</div>
+          <span class="username">{{ user.username }}</span>
+          <i class="fas fa-chevron-down" style="font-size:10px; color:var(--text-muted);"></i>
+        </div>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn-lms btn-accent" style="font-size:13px; padding:7px 16px;">
+          <i class="fas fa-right-to-bracket"></i> Sign In
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Django messages → toasts (hidden triggers) -->
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == 'error' %}
+        <div data-lms-message="{{ message }}" data-lms-type="danger" style="display:none;"></div>
+      {% elif message.tags == 'warning' %}
+        <div data-lms-message="{{ message }}" data-lms-type="warning" style="display:none;"></div>
+      {% elif message.tags == 'success' %}
+        <div data-lms-message="{{ message }}" data-lms-type="success" style="display:none;"></div>
+      {% else %}
+        <div data-lms-message="{{ message }}" data-lms-type="info" style="display:none;"></div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <!-- Page Content -->
+  <main class="lms-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="lms-footer">
+    <span>© 2025 LibraryOS · Built with <i class="fas fa-heart" style="color:var(--danger); font-size:11px;"></i> &amp; Django</span>
+    <span><i class="fas fa-shield-halved" style="color:var(--success);"></i> Secure System</span>
+  </footer>
+
+</div><!-- /lms-main -->
+
+<!-- Confirmation Modal -->
+<!-- Created dynamically by JS -->
+
+<script src="{% static 'js/script.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

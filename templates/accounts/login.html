@@ -1,54 +1,122 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — LibraryOS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body style="background:var(--bg-muted); min-height:100vh; margin:0; font-family:'Inter',sans-serif;">
 
-{% block title %}Login - Library Management System{% endblock %}
+<!-- Toast Container -->
+{% if messages %}
+  {% for message in messages %}
+    {% if message.tags == 'error' %}
+      <div data-lms-message="{{ message }}" data-lms-type="danger" style="display:none;"></div>
+    {% else %}
+      <div data-lms-message="{{ message }}" data-lms-type="{{ message.tags }}" style="display:none;"></div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Login</h3>
-            </div>
-            <div class="card-body">
-                <form method="post" id="loginForm" onsubmit="return validateLoginForm();">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="mt-3 text-center">
-                    <p>Don't have an account? <a href="{% url 'accounts:register' %}">Register here</a></p>
-                </div>
-            </div>
-        </div>
+<div class="auth-shell">
+
+  <!-- Left brand panel -->
+  <div class="auth-left">
+    <div class="auth-brand-icon">
+      <i class="fas fa-book-open"></i>
     </div>
+    <h1 class="auth-tagline">
+      Your Smart<br><span>Library</span> Portal
+    </h1>
+    <p class="auth-sub">
+      Access thousands of books, track your borrows, and manage your reading journey — all in one place.
+    </p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon"><i class="fas fa-book"></i></div>
+        <span>Browse a vast book catalogue</span>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon"><i class="fas fa-hand-holding-heart"></i></div>
+        <span>Request borrows online</span>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon"><i class="fas fa-clock-rotate-left"></i></div>
+        <span>Track your reading history</span>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon"><i class="fas fa-shield-halved"></i></div>
+        <span>Secure &amp; private account</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h2>Welcome back</h2>
+      <p>Sign in to your LibraryOS account to continue.</p>
+
+      <div class="auth-form-card">
+        <form method="post" id="loginForm">
+          {% csrf_token %}
+
+          <div style="margin-bottom:18px;">
+            <label for="username" class="lms-form-label">
+              <i class="fas fa-user" style="color:var(--accent); font-size:12px;"></i> Username
+            </label>
+            <input type="text" class="lms-form-control" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <label for="password" class="lms-form-label">
+              <i class="fas fa-lock" style="color:var(--accent); font-size:12px;"></i> Password
+            </label>
+            <div style="position:relative;">
+              <input type="password" class="lms-form-control" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" id="togglePassword" onclick="togglePwd()" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:14px;" title="Show/Hide password">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-lms btn-accent" id="loginSubmitBtn" style="width:100%; justify-content:center; padding:13px; font-size:14.5px; border-radius:var(--radius-md);">
+            <i class="fas fa-right-to-bracket"></i> Sign In
+          </button>
+        </form>
+
+        <div style="margin-top:20px; text-align:center; padding-top:20px; border-top:1px solid var(--border);">
+          <span style="font-size:13.5px; color:var(--text-secondary);">
+            Don't have an account?
+            <a href="{% url 'accounts:register' %}" style="color:var(--accent); font-weight:700; margin-left:4px;" id="go-to-register-link">Create one</a>
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
+<script src="{% static 'js/script.js' %}"></script>
 <script>
-function validateLoginForm() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    
-    if (!username || !password) {
-        alert('Please fill in all fields.');
-        return false;
-    }
-    
-    return true;
+function togglePwd() {
+  const input = document.getElementById('password');
+  const icon  = document.getElementById('eyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye','fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash','fa-eye');
+  }
 }
 </script>
-{% endblock %}
+</body>
+</html>

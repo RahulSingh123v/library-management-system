@@ -1,91 +1,109 @@
 {% extends 'base.html' %}
 
-{% block title %}Books - Library Management System{% endblock %}
+{% block title %}Books — LibraryOS{% endblock %}
+{% block page_title %}Browse Books{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Browse Books</h1>
 
-<!-- Search and Filter Form -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" id="searchForm">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.query }}
-                </div>
-                <div class="col-md-4 mb-3">
-                    {{ form.category }}
-                </div>
-                <div class="col-md-2 mb-3">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+<div class="section-header">
+  <h1 class="section-title"><i class="fas fa-book"></i> Browse Books</h1>
+</div>
+
+<!-- Search & Filter -->
+<div class="lms-card" style="margin-bottom:24px;">
+  <div class="lms-card-body" style="padding:18px 22px;">
+    <form method="get" id="searchForm">
+      <div style="display:grid; grid-template-columns:1fr 220px 120px; gap:12px; align-items:end;">
+        <div>
+          <label class="lms-form-label">Search Books</label>
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            {{ form.query }}
+          </div>
+        </div>
+        <div>
+          <label class="lms-form-label">Category</label>
+          {{ form.category }}
+        </div>
+        <div>
+          <button type="submit" class="btn-lms btn-accent w-100" id="search-submit-btn" style="height:42px;">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Books Grid -->
-<div class="row" id="bookGrid">
-    {% for book in page_obj %}
-        <div class="col-md-4 mb-4 book-item" data-title="{{ book.title|lower }}" data-author="{{ book.author|lower }}">
-            <div class="card h-100">
-                {% if book.cover_image %}
-                    <img src="{{ book.cover_image.url }}" class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover; ">
-                {% else %}
-                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                        <i class="fas fa-book fa-3x text-white"></i>
-                    </div>
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text text-muted">by {{ book.author }}</p>
-                    <p class="card-text"><small class="text-muted">{{ book.category.name }}</small></p>
-                    <p class="card-text">
-                        <small>
-                            {% if book.is_available %}
-                                <span class="badge bg-success">{{ book.available_copies }} Available</span>
-                            {% else %}
-                                <span class="badge bg-danger">Out of Stock</span>
-                            {% endif %}
-                        </small>
-                    </p>
-                    <a href="{% url 'library:book_detail' book.pk %}" class="btn btn-primary btn-sm">View Details</a>
-                </div>
-            </div>
-        </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">No books found matching your criteria.</div>
-        </div>
-    {% endfor %}
+<div class="grid-auto-md" id="bookGrid">
+  {% for book in page_obj %}
+  <div class="book-card" id="book-{{ book.pk }}" data-title="{{ book.title|lower }}" data-author="{{ book.author|lower }}">
+    <div class="book-cover">
+      {% if book.cover_image %}
+        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+      {% else %}
+        {% if forloop.counter|divisibleby:5 %}<div class="book-cover-placeholder grad-5"><i class="fas fa-book"></i></div>
+        {% elif forloop.counter|divisibleby:4 %}<div class="book-cover-placeholder grad-4"><i class="fas fa-book"></i></div>
+        {% elif forloop.counter|divisibleby:3 %}<div class="book-cover-placeholder grad-3"><i class="fas fa-book"></i></div>
+        {% elif forloop.counter|divisibleby:2 %}<div class="book-cover-placeholder grad-2"><i class="fas fa-book"></i></div>
+        {% else %}<div class="book-cover-placeholder grad-1"><i class="fas fa-book"></i></div>
+        {% endif %}
+      {% endif %}
+      {% if book.is_available %}
+        <span class="book-avail-chip avail"><i class="fas fa-circle" style="font-size:6px;"></i> {{ book.available_copies }} Avail.</span>
+      {% else %}
+        <span class="book-avail-chip unavail"><i class="fas fa-circle" style="font-size:6px;"></i> Out of Stock</span>
+      {% endif %}
+    </div>
+    <div class="book-card-body">
+      <div class="book-title">{{ book.title }}</div>
+      <div class="book-author">{{ book.author }}</div>
+      <span class="book-category-chip">{{ book.category.name }}</span>
+      <div class="book-card-footer">
+        <a href="{% url 'library:book_detail' book.pk %}" class="btn-lms btn-accent" style="width:100%; justify-content:center; font-size:12.5px;" id="detail-book-{{ book.pk }}">
+          View Details <i class="fas fa-arrow-right" style="font-size:10px;"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state" style="grid-column:1/-1;">
+    <div class="empty-state-icon"><i class="fas fa-book-open"></i></div>
+    <h4>No books found</h4>
+    <p>Try adjusting your search terms or browse all books.</p>
+    <a href="{% url 'library:book_list' %}" class="btn-lms btn-accent" id="clear-search-btn">Clear Search</a>
+  </div>
+  {% endfor %}
 </div>
 
 <!-- Pagination -->
 {% if page_obj.has_other_pages %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Previous</a>
-                </li>
-            {% endif %}
-            
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a></li>
-                {% endif %}
-            {% endfor %}
-            
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Next</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
+<div class="lms-pagination" style="margin-top:28px;">
+  {% if page_obj.has_previous %}
+    <a class="pg-btn" href="?page={{ page_obj.previous_page_number }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+  {% else %}
+    <span class="pg-btn disabled"><i class="fas fa-chevron-left"></i></span>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="pg-btn active">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a class="pg-btn" href="?page={{ num }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a class="pg-btn" href="?page={{ page_obj.next_page_number }}{% if query %}&query={{ query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
+      <i class="fas fa-chevron-right"></i>
+    </a>
+  {% else %}
+    <span class="pg-btn disabled"><i class="fas fa-chevron-right"></i></span>
+  {% endif %}
+</div>
 {% endif %}
+
 {% endblock %}

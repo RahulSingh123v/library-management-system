@@ -1,80 +1,87 @@
 {% extends 'base.html' %}
 
-{% block title %}My Borrowed Books - Library Management System{% endblock %}
+{% block title %}My Borrowed Books — LibraryOS{% endblock %}
+{% block page_title %}My Books{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">My Borrowed Books</h1>
 
-<div class="card">
-    <div class="card-body">
-        {% if active_borrows %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Book</th>
-                            <th>Author</th>
-                            <th>Status</th>
-                            <th>Borrow Date</th>
-                            <th>Due Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for borrow in active_borrows %}
-                            <tr {% if borrow.is_overdue %}class="table-danger overdue-row"{% endif %}>
-                                <td>{{ borrow.book.title }}</td>
-                                <td>{{ borrow.book.author }}</td>
-                                <td>
-                                    {% if borrow.status == 'Pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                    {% elif borrow.status == 'Approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ borrow.borrow_date|date:"M d, Y" }}</td>
-                                <td>
-                                    {{ borrow.due_date }}
-                                    {% if borrow.is_overdue %}
-                                        <span class="badge bg-danger">OVERDUE</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'library:book_detail' borrow.book.pk %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    {% if borrow.status == 'Approved' %}
-                                        <a href="{% url 'library:return_book' borrow.pk %}" 
-                                           class="btn btn-sm btn-primary"
-                                           onclick="return confirmReturn();">
-                                            <i class="fas fa-undo"></i> Return
-                                        </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> You have no active borrowed books.
-                <a href="{% url 'library:book_list' %}" class="alert-link">Browse books</a> to borrow.
-            </div>
-        {% endif %}
-    </div>
+<div class="section-header">
+  <h1 class="section-title"><i class="fas fa-book-bookmark"></i> My Borrowed Books</h1>
+  <a href="{% url 'library:book_list' %}" class="btn-lms btn-accent btn-sm-lms" id="browse-more-btn">
+    <i class="fas fa-plus"></i> Borrow More
+  </a>
 </div>
 
-<script>
-function confirmReturn() {
-    return confirm('Are you sure you want to return this book?');
-}
+<div class="lms-card">
+  <div class="lms-card-body" style="padding:0;">
+    {% if active_borrows %}
+    <div class="lms-table-wrap">
+      <table class="lms-table">
+        <thead>
+          <tr>
+            <th>Book</th>
+            <th>Author</th>
+            <th>Status</th>
+            <th>Borrowed</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for borrow in active_borrows %}
+          <tr {% if borrow.is_overdue %}class="overdue-row"{% endif %}>
+            <td style="font-weight:600;">{{ borrow.book.title }}</td>
+            <td style="color:var(--text-secondary); font-size:13px;">{{ borrow.book.author }}</td>
+            <td>
+              {% if borrow.status == 'Pending' %}
+                <span class="status-badge badge-pending">Pending</span>
+              {% elif borrow.status == 'Approved' %}
+                <span class="status-badge badge-approved">Approved</span>
+              {% endif %}
+            </td>
+            <td style="font-size:12.5px; color:var(--text-secondary); white-space:nowrap;">{{ borrow.borrow_date|date:"M d, Y" }}</td>
+            <td>
+              <span style="font-size:13px; font-weight:{% if borrow.is_overdue %}700{% else %}400{% endif %}; color:{% if borrow.is_overdue %}var(--danger){% else %}var(--text-secondary){% endif %};">
+                {{ borrow.due_date }}
+              </span>
+              {% if borrow.is_overdue %}
+                <span class="status-badge badge-overdue" style="margin-left:4px; font-size:10px;">OVERDUE</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <a href="{% url 'library:book_detail' borrow.book.pk %}" class="btn-lms btn-outline-lms btn-sm-lms" id="view-borrow-{{ borrow.pk }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if borrow.status == 'Approved' %}
+                <a href="{% url 'library:return_book' borrow.pk %}"
+                   class="btn-lms btn-accent btn-sm-lms"
+                   id="return-borrow-{{ borrow.pk }}"
+                   data-confirm="Return '{{ borrow.book.title }}'?"
+                   data-confirm-title="Return Book"
+                   data-confirm-ok="Return Book"
+                   data-confirm-type="success">
+                  <i class="fas fa-undo"></i> Return
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-book-open"></i></div>
+      <h4>No active borrows</h4>
+      <p>You don't have any books currently borrowed. Browse our collection and start reading!</p>
+      <a href="{% url 'library:book_list' %}" class="btn-lms btn-accent" id="empty-browse-btn">
+        <i class="fas fa-search"></i> Browse Books
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
 
-document.addEventListener('DOMContentLoaded', function() {
-    const overdueRows = document.querySelectorAll('.overdue-row');
-    overdueRows.forEach(row => {
-        row.style.backgroundColor = '#f8d7da';
-    });
-});
-</script>
 {% endblock %}
