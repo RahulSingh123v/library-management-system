@@ -33,6 +33,14 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Environment variables
+# Environment variables — NEVER commit actual .env
 .env
 .env.local
+.env.production
+
+# AWS / SSH keys
+*.pem
+ec2_key.pem
+
+# Vercel
+.vercel
